@@ -1,29 +1,43 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Update on Enter Example</title>
+  <title>Pe</title>
 </head>
 <body>
 
-  <h3>:</h3>
+  <h3></h3>
   <textarea id="inputField" rows="5" cols="40" placeholder=""></textarea>
 
-  <h3>general start</h3>
-  <div id="displayField" style="border: 1px solid #ccc; padding: 10px; width: 400px; background: #f9f9f9;">
-    <!-- Updated text will appear here -->
+  <h3>generalstart</h3>
+  
+  <div id="displayField" style="border: 1px solid #ccc; padding: 10px; width: 2000px; background: #f9f9f9; font-family: Courier, monospace;">
+    //<!-- Stored text will appear here -->
   </div>
- <h3>general end</h3>
+  
+  <h3>generalend</h3>
+  
   <script>
     const inputField = document.getElementById('inputField');
     const displayField = document.getElementById('displayField');
+    const storageKey = 'savedUnmodifiableString';
 
+    // Load saved text from localStorage on page load
+    window.addEventListener('load', () => {
+      const savedText = localStorage.getItem(storageKey);
+      if (savedText) {
+        displayField.textContent = savedText;
+      }
+    });
+
+    // Update display and save to localStorage when Enter is pressed
     inputField.addEventListener('keydown', (event) => {
       if (event.key === 'Enter') {
-        event.preventDefault();  // Prevent newline from being added in the textarea
+        event.preventDefault();  // Prevent newline in textarea
         const text = inputField.value.trim();
         if (text !== '') {
-          displayField.textContent = text;
-          inputField.value = '';  // Clear the textarea
+          displayField.textContent = text;          // Update unmodifiable string
+          localStorage.setItem(storageKey, text);  // Save to localStorage
+          inputField.value = '';                     // Clear input
         }
       }
     });
