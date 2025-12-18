@@ -1,18 +1,26 @@
-xml subf2
 <html>
 <body>
 <h1>YOUR NAME</h1>
 <p>Welcome to my website!</p>
-  </p> startHom1 </p> 
-R3004aC,
-</p> endHom1 </p>
+<p>startHom1</p> 
+<span id="updateable">R3004aC,</span>
 
-  </p> startmain1 </p> 
+<p>startmain1</p> 
 R2706bC,
-</p> endmain1 </p>
 
-    </p> startgoz1 </p> 
-R3004aV,R3106aC,arcuC,elvC,stkpC, 
+<p>startgoz1</p> 
+R3106aC, 
 </p> endgoz1 </p>
 </body>
+
+<!-- Add input and script before closing body -->
+<input type="text" id="textInput" placeholder="Enter new text" value="R3004aC,">
+<button onclick="updateContent()">Update</button>
+
+<script>
+function updateContent() {
+  const input = document.getElementById('textInput').value;
+  document.getElementById('updateable').textContent = input;
+}
+</script>
 </html>
