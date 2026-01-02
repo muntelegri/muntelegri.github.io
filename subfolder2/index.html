@@ -109,107 +109,107 @@
         // ⚠️ REPLACE THESE WITH YOUR ACTUAL CREDENTIALS ⚠️
         const supabaseUrl = 'https://ncpgaafwwyooskesmitl.supabase.co'
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jcGdhYWZ3d3lvb3NrZXNtaXRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNDczOTIsImV4cCI6MjA4MjkyMzM5Mn0.AnkL1x61qO1sg0Nbi5jAzr67vYuaWgPJgk09k68UR_U'
+ 
+    const client = window.supabase.createClient(supabaseUrl, supabaseKey)
+
+    // Load initial message from database
+    async function loadMessage() {
+        try {
+            const { data, error } = await client
+                .from('shared_data')
+                .select('message')
+                .eq('id', 3)  // Changed from 1 to 3
+                .single()
+            
+            if (error) {
+                console.error('Error loading:', error)
+                document.getElementById('displayValue').textContent = 'Error loading message'
+                document.getElementById('status').textContent = 'Error: ' + error.message
+                showError('Failed to load message: ' + error.message)
+            } else {
+                document.getElementById('displayValue').textContent = data.message || 'No message yet'
+                document.getElementById('status').textContent = 'Connected ✓'
+            }
+        } catch (err) {
+            console.error('Unexpected error:', err)
+            showError('Connection error. Please check your Supabase credentials.')
+        }
+    }
+
+    // Update message in database (User A)
+    document.getElementById('updateBtn').addEventListener('click', async () => {
+        const message = document.getElementById('myField').value.trim()
         
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey)
-
-        // Load initial message from database
-        async function loadMessage() {
-            try {
-                const { data, error } = await supabase
-                    .from('shared_data')
-                    .select('message')
-                    .eq('id', 1)
-                    .single()
-                
-                if (error) {
-                    console.error('Error loading:', error)
-                    document.getElementById('displayValue').textContent = 'Error loading message'
-                    document.getElementById('status').textContent = 'Error: ' + error.message
-                    showError('Failed to load message: ' + error.message)
-                } else {
-                    document.getElementById('displayValue').textContent = data.message || 'No message yet'
-                    document.getElementById('status').textContent = 'Connected ✓'
-                }
-            } catch (err) {
-                console.error('Unexpected error:', err)
-                showError('Connection error. Please check your Supabase credentials.')
-            }
+        if (!message) {
+            showError('Please enter a message')
+            return
         }
-
-        // Update message in database (User A)
-        document.getElementById('updateBtn').addEventListener('click', async () => {
-            const message = document.getElementById('myField').value.trim()
+        
+        try {
+            const { error } = await client
+                .from('shared_data')
+                .update({ message: message })
+                .eq('id', 3)  // Changed from 1 to 3
             
-            if (!message) {
-                showError('Please enter a message')
-                return
+            if (error) {
+                console.error('Error updating:', error)
+                showError('Failed to send message: ' + error.message)
+            } else {
+                console.log('Message sent successfully!')
+                document.getElementById('myField').value = '' // Clear input
+                hideError()
             }
-            
-            try {
-                const { error } = await supabase
-                    .from('shared_data')
-                    .update({ message: message })
-                    .eq('id', 1)
+        } catch (err) {
+            console.error('Unexpected error:', err)
+            showError('Failed to send message. Check console for details.')
+        }
+    })
+
+    // Listen for real-time changes (User B)
+    client
+        .channel('shared-data-channel')
+        .on('postgres_changes', 
+            { event: 'UPDATE', schema: 'public', table: 'shared_data' },
+            (payload) => {
+                console.log('Real-time update received:', payload)
+                document.getElementById('displayValue').textContent = payload.new.message
+                document.getElementById('status').textContent = 'Live update received ✓'
                 
-                if (error) {
-                    console.error('Error updating:', error)
-                    showError('Failed to send message: ' + error.message)
-                } else {
-                    console.log('Message sent successfully!')
-                    document.getElementById('myField').value = '' // Clear input
-                    hideError()
-                }
-            } catch (err) {
-                console.error('Unexpected error:', err)
-                showError('Failed to send message. Check console for details.')
+                // Flash effect to show update
+                const display = document.getElementById('displayValue')
+                display.style.background = '#c8e6c9'
+                setTimeout(() => {
+                    display.style.background = '#f0f0f0'
+                }, 500)
+            }
+        )
+        .subscribe((status) => {
+            console.log('Subscription status:', status)
+            if (status === 'SUBSCRIBED') {
+                document.getElementById('status').textContent = 'Real-time sync active ✓'
             }
         })
 
-        // Listen for real-time changes (User B)
-        supabase
-            .channel('shared-data-channel')
-            .on('postgres_changes', 
-                { event: 'UPDATE', schema: 'public', table: 'shared_data' },
-                (payload) => {
-                    console.log('Real-time update received:', payload)
-                    document.getElementById('displayValue').textContent = payload.new.message
-                    document.getElementById('status').textContent = 'Live update received ✓'
-                    
-                    // Flash effect to show update
-                    const display = document.getElementById('displayValue')
-                    display.style.background = '#c8e6c9'
-                    setTimeout(() => {
-                        display.style.background = '#f0f0f0'
-                    }, 500)
-                }
-            )
-            .subscribe((status) => {
-                console.log('Subscription status:', status)
-                if (status === 'SUBSCRIBED') {
-                    document.getElementById('status').textContent = 'Real-time sync active ✓'
-                }
-            })
+    // Helper functions
+    function showError(message) {
+        const errorDiv = document.getElementById('errorMessage')
+        errorDiv.textContent = message
+        errorDiv.style.display = 'block'
+    }
 
-        // Helper functions
-        function showError(message) {
-            const errorDiv = document.getElementById('errorMessage')
-            errorDiv.textContent = message
-            errorDiv.style.display = 'block'
+    function hideError() {
+        document.getElementById('errorMessage').style.display = 'none'
+    }
+
+    // Load initial message when page loads
+    loadMessage()
+
+    // Allow Enter key to send message
+    document.getElementById('myField').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            document.getElementById('updateBtn').click()
         }
-
-        function hideError() {
-            document.getElementById('errorMessage').style.display = 'none'
-        }
-
-        // Load initial message when page loads
-        loadMessage()
-
-        // Allow Enter key to send message
-        document.getElementById('myField').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                document.getElementById('updateBtn').click()
-            }
-        })
-    </script>
+    })
+</script>
 </body>
 </html>
