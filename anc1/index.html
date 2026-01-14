@@ -1,16 +1,139 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page 2</title>
     <style>
         body {
-            font-family: Courier, monospace;
-            background-color: #3F3F3F; /* Zenburn dark background */
-            color: #4682B4; /* Darker shade of sky blue */
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        textarea {
+            min-height: 100px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        button:hover {
+            background-color: #0b7dda;
+        }
+        .display-box {
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            min-height: 50px;
+        }
+        .section {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #ddd;
         }
     </style>
 </head>
 <body>
-    <p>hub anc</p>
-    <p>generalstart</p>
-    <p>generalend</p>
+    <h1>Page 2 - Real-time Updates</h1>
+    
+    <label for="userNameField">User Name:</label>
+    <input type="text" id="userNameField" placeholder="Enter user name...">
+    
+    <label for="messageField">Message:</label>
+    <textarea id="messageField" placeholder="Enter message..."></textarea>
+    
+    <button id="updateBtn">Update</button>
+    
+    <div class="section">
+        <h2>Current Values:</h2>
+        
+        <label>User Name:</label>
+        <div class="display-box" id="displayUserName">Loading...</div>
+        
+        <label>Message:</label>
+        <div class="display-box" id="displayMessage">Loading...</div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        const supabaseUrl = 'https://ncpgaafwwyooskesmitl.supabase.co'
+        const supabaseKey = 'YOUR_ANON_KEY_HERE'
+        
+        const client = window.supabase.createClient(supabaseUrl, supabaseKey)
+
+        async function loadData() {
+            const { data, error } = await client
+                .from('shared_data')
+                .select('user_name, message')
+                .eq('id', 4)
+                .single()
+            
+            if (error) {
+                console.error('Error:', error)
+            } else {
+                document.getElementById('displayUserName').textContent = data.user_name || 'No user name'
+                document.getElementById('displayMessage').textContent = data.message || 'No message'
+            }
+        }
+
+        document.getElementById('updateBtn').addEventListener('click', async () => {
+            const userName = document.getElementById('userNameField').value.trim()
+            const message = document.getElementById('messageField').value.trim()
+            
+            await client
+                .from('shared_data')
+                .update({ 
+                    user_name: userName,
+                    message: message
+                })
+                .eq('id', 4)
+            
+            document.getElementById('userNameField').value = ''
+            document.getElementById('messageField').value = ''
+        })
+
+        client
+            .channel('page2-updates')
+            .on('postgres_changes', 
+                { event: 'UPDATE', schema: 'public', table: 'shared_data' },
+                (payload) => {
+                    if (payload.new.id === 4) {
+                        document.getElementById('displayUserName').textContent = payload.new.user_name || 'No user name'
+                        document.getElementById('displayMessage').textContent = payload.new.message || 'No message'
+                    }
+                }
+            )
+            .subscribe()
+
+        loadData()
+    </script>
 </body>
 </html>
