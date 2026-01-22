@@ -152,7 +152,7 @@
             const { error } = await client
                 .from('shared_data')
                 .update({ message: message })
-                .eq('id', 4)  // Changed from 1 to 3
+                .eq('id', 6)  // Changed from 1 to 3
             
             if (error) {
                 console.error('Error updating:', error)
