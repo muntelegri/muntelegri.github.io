@@ -1,1 +1,124 @@
+Required Materials
 
+Raspberry Pi Compute Module 5
+
+P93XR‑25 CS RD1 carrier board
+
+M2.5 mounting screws (x4)
+
+Pre‑terminated wire harness (red, black, yellow, green wires)
+
+UV glue or hot‑melt adhesive (clear)
+
+Required Tools
+
+ESD wrist strap and ESD‑safe work surface
+
+Phillips screwdriver (M2.5 compatible)
+
+Tweezers
+
+UV lamp (if UV glue is used)
+
+Safety & ESD Precautions
+
+Always wear an ESD wrist strap.
+
+Handle boards by the edges only.
+
+Do not touch connector contacts or IC pins.
+
+Assembly Procedure
+1. Preparation
+
+Verify all parts match the bill of materials.
+
+Inspect both boards for visible damage or contamination.
+
+Place the carrier board on an ESD‑safe surface with the connectors facing upward.
+
+2. Install Compute Module
+
+Orient the Raspberry Pi Compute Module 5 so the dual board‑to‑board connectors align with the mating connectors on the carrier board.
+
+Starting from one side, carefully press the compute module straight down into the connectors.
+
+Apply even pressure until both connectors are fully seated. No visible gap should remain between the connectors.
+
+3. Secure Compute Module
+
+Align the four mounting holes of the compute module with the standoffs on the carrier board.
+
+Install four M2.5 screws.
+
+Tighten screws evenly in a cross pattern. Do not overtighten.
+
+4. Wire Harness Installation
+
+Route the wire harness along the PCB traces as shown in the reference images.
+
+Solder or connect wires to the designated pads:
+
+Red: Power
+
+Black: Ground
+
+Yellow / Green: Signal lines
+
+Ensure wires are flat against the board and do not cross connector openings.
+
+5. Wire Securing
+
+Apply a small amount of clear adhesive over the wire anchor points.
+
+Ensure adhesive covers the wire insulation and contacts the PCB for strain relief.
+
+Cure adhesive per manufacturer instructions (UV or cooling time).
+
+6. Final Inspection
+
+Verify compute module is fully seated and flush.
+
+Confirm all screws are installed and secure.
+
+Check wire routing matches reference images and adhesive is cured.
+
+Inspect connectors (USB, Ethernet) for obstruction or damage.
+
+Quality Checks
+
+No loose wires or screws
+
+No excess adhesive near connectors
+
+Module sits parallel to carrier board
+
+Notes
+
+Do not power the assembly before completing final inspection.
+
+Any deviation from this instruction must be approved by engineering.
+
+Nice, thanks for the photos — they’re actually pretty clear 👍
+
+I’ve created a formal work instruction in the canvas based directly on what’s visible in your images:
+
+Raspberry Pi Compute Module 5
+
+P93XR-25 CS RD1 carrier board
+
+Dual board-to-board connectors
+
+Wire harness routing and glue strain-relief
+
+Mechanical fastening and inspection steps
+
+This is written in a manufacturing / production WI style, so it should be usable for:
+
+Assembly operators
+
+Pilot builds
+
+ISO / quality documentation
+
+Engineering handoff
