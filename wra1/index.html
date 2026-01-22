@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anc1</title>
+    <title>wra</title>
     <style>
         body 
         {
@@ -98,9 +98,9 @@
         <div class="error" id="errorMessage"></div>
         
         <div class="display-section">
-            <h2>startAnc1</h2>
+            <h2>startwra1</h2>
             <div id="displayValue">Loading...</div>
-             <h2>endAnc1</h2>
+             <h2>endwra1</h2>
             <div class="status" id="status">Connecting...</div>
         </div>
     </div>
@@ -121,7 +121,7 @@
             const { data, error } = await client
                 .from('shared_data')
                 .select('message')
-                .eq('id', 4)  // Changed from 1 to 3
+                .eq('id', 6)  // Changed from 1 to 3
                 .single()
             
             if (error) {
@@ -170,7 +170,7 @@
 
     // Listen for real-time changes (User B)
     client
-        .channel('anc1')
+        .channel('wra1')
         .on('postgres_changes', 
             { event: 'UPDATE', schema: 'public', table: 'shared_data' },
             (payload) => {
