@@ -1,1 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anc1</title>
+    <style>
+        body 
+        {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container 
+        {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .info {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:active {
+            background-color: #3d8b40;
+        }
+        .display-section {
+            margin-top: 40px;
+        }
+        h2 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        #displayValue {
+            padding: 20px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            font-size: 18px;
+            color: #333;
+            min-height: 50px;
+            word-wrap: break-word;
+        }
+        .status {
+            font-size: 12px;
+            color: #888;
+            margin-top: 10px;
+        }
+        .error {
+            color: #f44336;
+            padding: 10px;
+            background: #ffebee;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>messages</h1>
+        <p class="info">YOUR NAME</p>
+        
+        <input type="text" id="myField" placeholder="Type your ...">
+        <button id="updateBtn">Send Message</button>
+        
+        <div class="error" id="errorMessage"></div>
+        
+        <div class="display-section">
+            <h2>startAnc1</h2>
+            <div id="displayValue">Loading...</div>
+             <h2>endAnc1</h2>
+            <div class="status" id="status">Connecting...</div>
+        </div>
+    </div>
 
+    <!-- Load Supabase from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // ⚠️ REPLACE THESE WITH YOUR ACTUAL CREDENTIALS ⚠️
+        const supabaseUrl = 'https://ncpgaafwwyooskesmitl.supabase.co'
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jcGdhYWZ3d3lvb3NrZXNtaXRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNDczOTIsImV4cCI6MjA4MjkyMzM5Mn0.AnkL1x61qO1sg0Nbi5jAzr67vYuaWgPJgk09k68UR_U'
+ 
+    const client = window.supabase.createClient(supabaseUrl, supabaseKey)
+
+    // Load initial message from database
+    async function loadMessage() {
+        try {
+            const { data, error } = await client
+                .from('shared_data')
+                .select('message')
+                .eq('id', 4)  // Changed from 1 to 3
+                .single()
+            
+            if (error) {
+                console.error('Error loading:', error)
+                document.getElementById('displayValue').textContent = 'Error loading message'
+                document.getElementById('status').textContent = 'Error: ' + error.message
+                showError('Failed to load message: ' + error.message)
+            } else {
+                document.getElementById('displayValue').textContent = data.message || 'No message yet'
+                document.getElementById('status').textContent = 'Connected ✓'
+            }
+        } catch (err) {
+            console.error('Unexpected error:', err)
+            showError('Connection error. Please check your Supabase credentials.')
+        }
+    }
+
+    // Update message in database (User A)
+    document.getElementById('updateBtn').addEventListener('click', async () => {
+        const message = document.getElementById('myField').value.trim()
+        
+        if (!message) {
+            showError('Please enter a message')
+            return
+        }
+        
+        try {
+            const { error } = await client
+                .from('shared_data')
+                .update({ message: message })
+                .eq('id', 4)  // Changed from 1 to 3
+            
+            if (error) {
+                console.error('Error updating:', error)
+                showError('Failed to send message: ' + error.message)
+            } else {
+                console.log('Message sent successfully!')
+                document.getElementById('myField').value = '' // Clear input
+                hideError()
+            }
+        } catch (err) {
+            console.error('Unexpected error:', err)
+            showError('Failed to send message. Check console for details.')
+        }
+    })
+
+    // Listen for real-time changes (User B)
+    client
+        .channel('anc1')
+        .on('postgres_changes', 
+            { event: 'UPDATE', schema: 'public', table: 'shared_data' },
+            (payload) => {
+                console.log('Real-time update received:', payload)
+                document.getElementById('displayValue').textContent = payload.new.message
+                document.getElementById('status').textContent = 'Live update received ✓'
+                
+                // Flash effect to show update
+                const display = document.getElementById('displayValue')
+                display.style.background = '#c8e6c9'
+                setTimeout(() => {
+                    display.style.background = '#f0f0f0'
+                }, 500)
+            }
+        )
+        .subscribe((status) => {
+            console.log('Subscription status:', status)
+            if (status === 'SUBSCRIBED') {
+                document.getElementById('status').textContent = 'Real-time sync active ✓'
+            }
+        })
+
+    // Helper functions
+    function showError(message) {
+        const errorDiv = document.getElementById('errorMessage')
+        errorDiv.textContent = message
+        errorDiv.style.display = 'block'
+    }
+
+    function hideError() {
+        document.getElementById('errorMessage').style.display = 'none'
+    }
+
+    // Load initial message when page loads
+    loadMessage()
+
+    // Allow Enter key to send message
+    document.getElementById('myField').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            document.getElementById('updateBtn').click()
+        }
+    })
+</script>
+</body>
+</html>
