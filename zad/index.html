@@ -1,1 +1,240 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page with File Sharing</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        textarea {
+            min-height: 100px;
+        }
+        input[type="file"] {
+            padding: 8px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .display-box {
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            min-height: 50px;
+        }
+        .section {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #ddd;
+        }
+        .file-preview {
+            max-width: 100%;
+            margin-top: 10px;
+        }
+        .file-preview img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+        .file-link {
+            color: #2196F3;
+            text-decoration: none;
+        }
+        .file-link:hover {
+            text-decoration: underline;
+        }
+        .status {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Real-time Updates with File Sharing</h1>
+    
+    <label for="userNameField">User Name:</label>
+    <input type="text" id="userNameField" placeholder="Enter user name...">
+    
+    <label for="messageField">Message:</label>
+    <textarea id="messageField" placeholder="Enter message..."></textarea>
+    
+    <label for="fileField">Upload File:</label>
+    <input type="file" id="fileField" accept="image/*,application/pdf,.doc,.docx">
+    <div class="status" id="uploadStatus"></div>
+    
+    <button id="updateBtn">Update</button>
+    
+    <div class="section">
+        <h2>Current Values:</h2>
+        
+        <label>User Name:</label>
+        <div class="display-box" id="displayUserName">Loading...</div>
+        
+        <label>Message:</label>
+        <div class="display-box" id="displayMessage">Loading...</div>
+        
+        <label>Shared File:</label>
+        <div class="display-box" id="displayFile">No file uploaded</div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        const supabaseUrl = 'https://ncpgaafwwyooskesmitl.supabase.co'
+        const supabaseKey = 'YOUR_ANON_KEY_HERE'
+        
+        const client = window.supabase.createClient(supabaseUrl, supabaseKey)
+        const ROW_ID = 3  // Change to 4 for page 2
+
+        async function loadData() {
+            const { data, error } = await client
+                .from('shared_data')
+                .select('user_name, message, file_url')
+                .eq('id', ROW_ID)
+                .single()
+            
+            if (error) {
+                console.error('Error:', error)
+            } else {
+                document.getElementById('displayUserName').textContent = data.user_name || 'No user name'
+                document.getElementById('displayMessage').textContent = data.message || 'No message'
+                
+                // Display file if exists
+                if (data.file_url) {
+                    displayFile(data.file_url)
+                } else {
+                    document.getElementById('displayFile').innerHTML = 'No file uploaded'
+                }
+            }
+        }
+
+        function displayFile(url) {
+            const fileExt = url.split('.').pop().toLowerCase()
+            const displayDiv = document.getElementById('displayFile')
+            
+            if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
+                // Show image
+                displayDiv.innerHTML = `<img src="${url}" alt="Uploaded file" style="max-width: 100%; border-radius: 5px;">`
+            } else {
+                // Show download link
+                const fileName = url.split('/').pop()
+                displayDiv.innerHTML = `<a href="${url}" target="_blank" class="file-link">📎 ${fileName}</a>`
+            }
+        }
+
+        document.getElementById('updateBtn').addEventListener('click', async () => {
+            const userName = document.getElementById('userNameField').value.trim()
+            const message = document.getElementById('messageField').value.trim()
+            const fileInput = document.getElementById('fileField')
+            const file = fileInput.files[0]
+            
+            let fileUrl = null
+            
+            // Upload file if selected
+            if (file) {
+                document.getElementById('uploadStatus').textContent = 'Uploading file...'
+                
+                const fileName = `${Date.now()}_${file.name}`
+                
+                const { data: uploadData, error: uploadError } = await client.storage
+                    .from('uploads')
+                    .upload(fileName, file)
+                
+                if (uploadError) {
+                    console.error('Upload error:', uploadError)
+                    document.getElementById('uploadStatus').textContent = 'Upload failed: ' + uploadError.message
+                    return
+                } else {
+                    // Get public URL
+                    const { data: urlData } = client.storage
+                        .from('uploads')
+                        .getPublicUrl(fileName)
+                    
+                    fileUrl = urlData.publicUrl
+                    document.getElementById('uploadStatus').textContent = 'File uploaded successfully!'
+                }
+            }
+            
+            // Update database
+            const updateData = {
+                user_name: userName,
+                message: message
+            }
+            
+            if (fileUrl) {
+                updateData.file_url = fileUrl
+            }
+            
+            await client
+                .from('shared_data')
+                .update(updateData)
+                .eq('id', ROW_ID)
+            
+            // Clear inputs
+            document.getElementById('userNameField').value = ''
+            document.getElementById('messageField').value = ''
+            document.getElementById('fileField').value = ''
+            
+            setTimeout(() => {
+                document.getElementById('uploadStatus').textContent = ''
+            }, 3000)
+        })
+
+        // Real-time updates
+        client
+            .channel('page-updates')
+            .on('postgres_changes', 
+                { event: 'UPDATE', schema: 'public', table: 'shared_data' },
+                (payload) => {
+                    if (payload.new.id === ROW_ID) {
+                        document.getElementById('displayUserName').textContent = payload.new.user_name || 'No user name'
+                        document.getElementById('displayMessage').textContent = payload.new.message || 'No message'
+                        
+                        if (payload.new.file_url) {
+                            displayFile(payload.new.file_url)
+                        }
+                    }
+                }
+            )
+            .subscribe()
+
+        loadData()
+    </script>
+</body>
+</html>
