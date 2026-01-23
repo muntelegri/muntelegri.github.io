@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Page with File Sharing</title>
+    <title>Page</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -86,7 +86,7 @@
     </style>
 </head>
 <body>
-    <h1>Real-time Updates with File Sharing</h1>
+    <h1></h1>
     
     <label for="userNameField">User Name:</label>
     <input type="text" id="userNameField" placeholder="Enter user name...">
@@ -117,10 +117,11 @@
     
     <script>
         const supabaseUrl = 'https://ncpgaafwwyooskesmitl.supabase.co'
-        const supabaseKey = 'YOUR_ANON_KEY_HERE'
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jcGdhYWZ3d3lvb3NrZXNtaXRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNDczOTIsImV4cCI6MjA4MjkyMzM5Mn0.AnkL1x61qO1sg0Nbi5jAzr67vYuaWgPJgk09k68UR_U'
+ 
         
         const client = window.supabase.createClient(supabaseUrl, supabaseKey)
-        const ROW_ID = 3  // Change to 4 for page 2
+        const ROW_ID = 8  // Change to 4 for page 2
 
         async function loadData() {
             const { data, error } = await client
